@@ -2,7 +2,7 @@ import os
 import sys
 import importlib
 from threading import Thread
-from typing import Optional, Type, Dict, List
+from typing import Optional, Type, Dict, Tuple, List
 
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -15,9 +15,12 @@ from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout
 
+import numpy as np
+
 import ibs
 import impl
 import config
+from layout import build_layout
 
 
 class MainWindow(QWidget):
@@ -25,10 +28,10 @@ class MainWindow(QWidget):
         super(MainWindow, self).__init__(flags=Qt.WindowFlags())
 
         self.exts = exts
+        self.setLayout(build_layout(exts))
         self.ext_ths = list()
         for e in self.exts:
-            # TODO: create and add an API obj arg to each of the threads
-            th = Thread(target=e.startup_ref())
+            th = Thread(target=e.startup_ref(), args=(ibs.API(e.get_name()),))
             th.start()
             self.ext_ths.append(th)
 
@@ -155,15 +158,13 @@ class StartupWindow(QWidget):
         self.continued = False
 
         self.exts = exts
-        self.extmap: Dict[Type[ibs.IbsExt], Optional[ibs.IbsOpt]] = dict()
+        self.extmap: Dict[Type[ibs.IbsExt], Tuple[ToggleExpandable, Optional[ibs.IbsOpt]]] = dict()
         te_layout = QVBoxLayout()
         for ext in extmap:
             name = ext.get_name()
-            if extmap[ext]:
-                self.extmap[ext] = extmap[ext]()
-            else:
-                self.extmap[ext] = None
-            extopt = ToggleExpandable(name, self.extmap[ext])
+            opt = extmap[ext]() if extmap[ext] else None
+            extopt = ToggleExpandable(name, opt)
+            self.extmap[ext] = (extopt, opt)
             te_layout.addWidget(extopt)
         te_layout.setAlignment(QtCore.Qt.AlignTop)
         te_widget = QWidget()
@@ -178,7 +179,8 @@ class StartupWindow(QWidget):
 
     def on_continue(self):
         for ext in self.extmap:
-            self.exts.append(ext(self.extmap[ext]))
+            if self.extmap[ext][0].check_box.isChecked():
+                self.exts.append(ext(self.extmap[ext][1].get_config() if self.extmap[ext][1] else None))
         self.continued = True
         self.close()
 

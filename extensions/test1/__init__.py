@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional
 
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QWidget
@@ -11,23 +11,31 @@ from . import main
 
 class Extension(ibs.IbsExt):
     def __init__(self, options):
-        pass
+        super(Extension, self).__init__(options)
 
     @staticmethod
     def get_name() -> str:
         return "test 1"
 
     def startup_ref(self):
-        pass
+        return main.startup
 
     def shutdown_ref(self):
-        pass
+        return main.shutdown
 
-    def get_widget(self) -> QWidget:
-        pass
+    def get_guicfg(self) -> Optional[ibs.IbsGuiCfg]:
+        class GuiCfg(ibs.IbsGuiCfg):
+            def get_widget(self) -> QWidget:
+                return main.MainWidget()
+
+            def get_layout(self) -> LayoutHint:
+                return LayoutHint.Center
+
+        return GuiCfg()
 
 
 class Options(ibs.IbsOpt):
+    # noinspection PyArgumentList
     def __init__(self):
         super(Options, self).__init__()
 

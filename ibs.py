@@ -1,5 +1,4 @@
 from abc import ABC
-from enum import Enum
 from threading import Lock
 from typing import Callable, Tuple, Optional
 
@@ -11,9 +10,8 @@ import config
 
 
 class API:
-    def __init__(self, ext, cmp):
+    def __init__(self, ext: str):
         self.extname = ext
-        self.cmpname = cmp
 
     @staticmethod
     def read_frame():
@@ -29,7 +27,7 @@ class API:
         pass
 
 
-class LayoutHint(Enum):
+class LayoutHint(int):
     Center = 0
     Left = 1
     LeftFull = 2
@@ -54,14 +52,26 @@ class LayoutHint(Enum):
     BottomLeft = 21
     BottomRight = 22
     BottomFloat = 23
+    BottomCenter = 24
+
+
+class IbsGuiCfg:
+    """
+    Abstract gui component interface
+    """
+    def get_widget(self) -> QWidget:
+        raise NotImplementedError()
+
+    def get_layout(self) -> LayoutHint:
+        raise NotImplementedError()
 
 
 class IbsExt:
     """
     Abstract component interface
     """
-    def __init__(self, _):
-        raise NotImplementedError()
+    def __init__(self, options):
+        self.options = options
 
     @staticmethod
     def get_name() -> str:
@@ -73,19 +83,9 @@ class IbsExt:
     def shutdown_ref(self) -> Callable[[], None]:
         raise NotImplementedError()
 
-    def get_widget(self) -> Optional[QWidget]:
-        raise NotImplementedError()
-
-
-class IbsGuiExt(IbsExt, ABC):
-    """
-    Abstract gui component interface
-    """
-    def get_widget(self) -> QWidget:
-        raise NotImplementedError()
-
-    def get_layout(self) -> LayoutHint:
-        raise NotImplementedError()
+    # noinspection PyMethodMayBeStatic
+    def get_guicfg(self) -> Optional[IbsGuiCfg]:
+        return None
 
 
 class IbsOpt(QWidget):
@@ -97,11 +97,3 @@ class IbsOpt(QWidget):
 
     def get_config(self):
         raise NotImplementedError()
-
-
-def reg_ext(ext: IbsExt):
-    config.components.append(ext)
-    return API(
-        ext.cmpname if hasattr(ext, "cmpname") else config.current_ext,
-        ext.extname if hasattr(ext, "extname") else ext.__class__.__name__
-    )

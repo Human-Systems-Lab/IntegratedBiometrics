@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QWidget
@@ -17,10 +17,7 @@ class Extension(ibs.IbsExt):
         return "test 2"
 
     def startup_ref(self):
-        pass
+        return lambda x: print("Startup test 2")
 
     def shutdown_ref(self):
-        pass
-
-    def get_widget(self) -> QWidget:
-        pass
+        return lambda: print("Shutdown test 2")

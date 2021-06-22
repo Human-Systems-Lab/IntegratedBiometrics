@@ -6,6 +6,11 @@ import cv2
 import numpy as np
 
 
+#
+# This file contains the logic for accessing shared resourses across extensions
+#
+
+
 class _FrameManager:  # Singleton
     def __init__(self):
         self._cap = cv2.VideoCapture(0)

@@ -3,7 +3,7 @@ import logging
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget
 
-api = None
+g_api = None
 
 
 class Widget(QWidget):

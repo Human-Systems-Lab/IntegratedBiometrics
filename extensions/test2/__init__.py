@@ -1,16 +1,26 @@
+from typing import Tuple
+
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QVBoxLayout
+
 import ibs
-from . import main
+from ibs import LayoutHint
 
 
-class TestComponent(ibs.IbsCmp):
+class Extension(ibs.IbsExt):
+    def __init__(self, options):
+        pass
+
+    @staticmethod
+    def get_name() -> str:
+        return "test 2"
+
     def startup_ref(self):
-        return main.startup
+        pass
 
     def shutdown_ref(self):
-        return main.shutdown
+        pass
 
-    def get_widget(self):
-        return main.Widget()
-
-
-main.api = ibs.reg_ext(TestComponent())
+    def get_widget(self) -> QWidget:
+        pass

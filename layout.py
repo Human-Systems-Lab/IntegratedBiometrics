@@ -1,5 +1,4 @@
-from enum import Enum
-from typing import List, Optional
+from typing import List, Tuple, Optional
 
 import numpy as np
 from PyQt5.QtCore import Qt
@@ -357,13 +356,9 @@ def arrange_center(widgets) -> QLayout:
 
 
 # noinspection PyArgumentList
-def build_layout(exts: List[ibs.IbsExt]) -> QLayout:
-    # Filtering the extensions for GUIs
-    guicfgs: List[ibs.IbsGuiCfg] = list()
-    for e in exts:
-        guicfg = e.get_guicfg()
-        if guicfg:
-            guicfgs.append(guicfg)
+def build_layout(exts: List[Optional[Tuple[QWidget, ibs.LayoutHint]]]) -> QLayout:
+    # Filtering the extensions for widgets
+    guicfgs: List[Tuple[QWidget, ibs.LayoutHint]] = [e for e in exts if e is not None]
 
     # Building the main widgets from extension widgets
 
@@ -378,14 +373,14 @@ def build_layout(exts: List[ibs.IbsExt]) -> QLayout:
     center_widgets = list()
     widget_types = [[list() for _ in range(5)] for _ in range(4)]  # [l,t,r,b][std,ful,beg,end,flo]
     for guicfg in guicfgs:
-        lo = guicfg.get_layout()
+        lo = guicfg[1]
         if lo == 0:
-            center_widgets.append(guicfg.get_widget())
+            center_widgets.append(guicfg[0])
         elif (lo - 1) % 6 == 5:
             # *Center LayoutHint type
             raise NotImplementedError("*Center type hints have not been implemented yet")
         else:
-            widget_types[(lo - 1) // 6][(lo - 1) % 6].append(guicfg.get_widget())
+            widget_types[(lo - 1) // 6][(lo - 1) % 6].append(guicfg[0])
 
     for i, (panel, widgets) in enumerate(zip([lw, tw, rw, bw], widget_types)):
         panel.setLayout(arrange_sidepanel(i, widgets))
@@ -396,7 +391,7 @@ def build_layout(exts: List[ibs.IbsExt]) -> QLayout:
     # Corner allocation
     corners = np.zeros((8,), dtype=np.float32)
     for guicfg in guicfgs:
-        corners += mappings[guicfg.get_layout()]
+        corners += mappings[guicfg[1]]
     ccaps = [4] * 4
     for i in range(4):
         if corners[2 * i] > corners[2 * i + 1]:

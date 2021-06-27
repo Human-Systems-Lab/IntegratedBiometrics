@@ -1,3 +1,4 @@
+import time
 import logging
 from threading import Thread, Lock
 from typing import Optional
@@ -13,7 +14,15 @@ import numpy as np
 
 class _FrameManager:  # Singleton
     def __init__(self):
-        self._cap = cv2.VideoCapture(0)
+        self._cap_lock = Lock()
+        with self._cap_lock:
+            self._cap = cv2.VideoCapture(0)
+            if not self._cap:
+                raise RuntimeError("Unable to retrieve a webcam")
+            ret, frame = self._cap.read()
+        if not ret:
+            raise RuntimeError("Unable to access the video camera")
+        self.frame = frame
         th = Thread(target=self._read_webcam, daemon=True)
 
         self._lock = Lock()
@@ -21,22 +30,22 @@ class _FrameManager:  # Singleton
 
     def read_frame(self):
         with self._lock:
-            return np.copy(self.frame)
+            return self.frame.copy()
 
     def _read_webcam(self):
-        # Immediately grab the lock before anyone else can
-        with self._lock:
-            ret, frame = self._cap.read()
-            if not ret:
-                exit(1)  # Probably not the best way of dealing with this
-            self.frame = frame
-
         while True:
-            ret, frame = self._cap.read()
+            with self._cap_lock:
+                if self._cap.isOpened():
+                    ret, frame = self._cap.read()
+                else:
+                    raise RuntimeError("Webcam closed unexpectedly")
             if not ret:
+                logging.warning("Failed to retrieve frame from video feed")
+                time.sleep(1)
                 continue
             with self._lock:
-                self.frame = frame
+                frame = np.resize(frame, self.frame.shape)
+                self.frame[...] = frame[...]
 
 
 fmang: Optional[_FrameManager] = None

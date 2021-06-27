@@ -1,3 +1,4 @@
+import logging
 from abc import ABC
 from threading import Lock
 from typing import Callable, Tuple, Optional
@@ -12,6 +13,7 @@ import config
 class API:
     def __init__(self, ext: str):
         self.extname = ext
+        self.log = logging
 
     @staticmethod
     def read_frame():
@@ -77,7 +79,7 @@ class IbsExt:
     def get_name() -> str:
         raise NotImplementedError()
 
-    def startup_ref(self) -> Callable[[API], None]:
+    def startup_ref(self) -> Callable[[API, QWidget], None]:
         raise NotImplementedError()
 
     def shutdown_ref(self) -> Callable[[], None]:

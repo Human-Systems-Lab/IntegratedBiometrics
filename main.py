@@ -15,8 +15,6 @@ from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout
 
-import numpy as np
-
 import ibs
 import impl
 import config
@@ -26,12 +24,24 @@ from layout import build_layout
 class MainWindow(QWidget):
     def __init__(self, exts: List[ibs.IbsExt]):
         super(MainWindow, self).__init__(flags=Qt.WindowFlags())
+        self.setCursor(Qt.ArrowCursor)
+        self.setWindowIcon(QtGui.QIcon("assets/HSL-logo.png"))
+        self.setWindowTitle("HSL | Biometric Software")
 
         self.exts = exts
-        self.setLayout(build_layout(exts))
-        self.ext_ths = list()
+        gui_info: List[Optional[Tuple[QWidget, ibs.LayoutHint]]] = list()
         for e in self.exts:
-            th = Thread(target=e.startup_ref(), args=(ibs.API(e.get_name()),))
+            guicfg = e.get_guicfg()
+            if guicfg:
+                layout = guicfg.get_layout()
+                widget = guicfg.get_widget()
+                gui_info.append((widget, layout))
+            else:
+                gui_info.append(None)
+        self.setLayout(build_layout(gui_info))
+        self.ext_ths = list()
+        for e, info in zip(self.exts, gui_info):
+            th = Thread(target=e.startup_ref(), args=(ibs.API(e.get_name()), info[0] if info else None))
             th.start()
             self.ext_ths.append(th)
 
@@ -128,6 +138,7 @@ class ToggleExpandable(QWidget):
         base_layout.addWidget(self.expand_button)
         base_layout.addWidget(self.check_box)
         base_layout.addWidget(self.label)
+        base_layout.setAlignment(Qt.AlignLeft)
         if widget is None:
             self.setLayout(base_layout)
         else:
@@ -234,4 +245,6 @@ def main():
 
 
 if __name__ == "__main__":
+    import faulthandler
+    faulthandler.enable()
     main()

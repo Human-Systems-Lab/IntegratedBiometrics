@@ -17,7 +17,7 @@ class Extension(ibs.IbsExt):
         return "test 2"
 
     def startup_ref(self):
-        return lambda x: print("Startup test 2")
+        return lambda api, widget: api.log.info("Startup test 2")
 
     def shutdown_ref(self):
         return lambda: print("Shutdown test 2")

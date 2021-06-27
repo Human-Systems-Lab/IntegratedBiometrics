@@ -1,11 +1,13 @@
-import logging
+from typing import Optional
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout
 
-g_api = None
+import ibs
+
+g_api: Optional[ibs.API] = None
 
 
 class MainWidget(QWidget):
@@ -17,11 +19,11 @@ class MainWidget(QWidget):
         self.setLayout(layout)
 
 
-def startup(api):
+def startup(api, widget):
     global g_api
     g_api = api
-    logging.info("Test1 extension startup")
+    g_api.log.info("Test1 extension startup")
 
 
 def shutdown():
-    logging.info("Test1 extension shutdown")
+    g_api.log.info("Test1 extension shutdown")

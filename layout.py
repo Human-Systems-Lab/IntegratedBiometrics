@@ -414,13 +414,13 @@ def build_layout(exts: List[Optional[Tuple[QWidget, ibs.LayoutHint]]]) -> QLayou
         ccount[i] += 1
     cstart = 4
     for i in range(4):
-        if ccount == 2:
+        if ccount[i] == 2:
             cstart = i
             break
 
     if cstart == 0:
         tmp = QWidget()
-        tmp.setLayout(nl_layout(ccaps, tw, rw, bw))
+        tmp.setLayout(nl_layout(ccaps, cw, tw, rw, bw))
         layout = QHBoxLayout()
         layout.addWidget(lw)
         layout.addWidget(tmp)

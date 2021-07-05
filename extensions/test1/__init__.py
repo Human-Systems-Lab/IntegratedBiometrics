@@ -29,7 +29,7 @@ class Extension(ibs.IbsExt):
                 return main.MainWidget()
 
             def get_layout(self) -> LayoutHint:
-                return LayoutHint.Center
+                return LayoutHint.Top
 
         return GuiCfg()
 

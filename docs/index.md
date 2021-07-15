@@ -1,12 +1,12 @@
 # Integratd Biometrics Documentation Index
 
-### Extension Authoring 
+### Extension Authors
 
 - [Overview](overview.md)
 - [Extension Authoring](extension_authoring.md)
 - [API Reference](api_reference.md)
 
-### Integrated Biometrics Implementation
+### Framework Development
 
 - [Framework Components](framework_components.md)
 - [Extension Configuration](extension_configuration.md)

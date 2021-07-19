@@ -1,4 +1,4 @@
-# Integratd Biometrics Documentation Index
+# Integrated Biometrics Documentation Index
 
 ### Extension Authors
 

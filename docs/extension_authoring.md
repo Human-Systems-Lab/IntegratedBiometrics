@@ -6,7 +6,7 @@
 ##### Work in Progress
 
 If you are only interested in testing out an idea for an extension, without the intention of integrating it into the
-end software, you can clone this main repository and jump to the [getting started](#Getting Started) section of this
+end software, you can clone this main repository and jump to the [getting started](#getting-started) section of this
 page.
 
 Before creating an extension for this framework, it is recommended that you first fork this repository.  To keep your
@@ -18,7 +18,7 @@ get your changes integrated into the main repository.
 ### Getting Started
 
 Note: You will first need a clone of this repository on your computer.  See the
-[setup up for contributing](#Setup for Contributing) section of this page for getting a clone of this repository.
+[setup up for contributing](#setup-for-contributing) section of this page for getting a clone of this repository.
 
 To start authoring your extension, create a new python package in the `extensions` directory of this repo.  Your
 folder structure should now resemble the following:
@@ -146,12 +146,12 @@ Integrated Biometrics Framework!
 
 ### Implementing Startup and Shutdown
 
-In the [getting started](#Getting Started) section of this page, you created your first working extension, but
+In the [getting started](#getting-started) section of this page, you created your first working extension, but
 unfortunately, it didn't seem to do much.  This is where the `startup` and `shutdown` functions are useful.  After the
 user presses the `continue` button on the startup screen, a new thread of execution is launched for each extension that
 is loaded.  Then the provided `startup` functions are called on that thread for each of the extensions.  This means
 that you can use your `startup` function just as you would a normal `main` function in most languages.  For this
-application, the `startup` function usually consists of a `while True` loop which continuously collects data and
+application, the `startup` function usually consists of a `while True:` loop which continuously collects data and
 measures the cognative load of the participant through some algorithm.  When the time comes for the application to close
 via user interaction, external signals, etc. the provided `shutdown` functions are called for each of the extensions
 from the main thread.  So to handle this, the following coding style is typically used:
@@ -263,6 +263,128 @@ class Extension(ibs.IbsExt):
         return main.shutdown
 ```
 
+### Extension Graphics
+
+**Documentation needed**
+
 ### Startup Configurations
 
-### Extension Graphics
+When creating extensions, it is sometimes useful to allow the user to select some configuration settings before
+lanching the extensions via the function provided by `startup_ref()`.  To do this, you can create an `Options` class
+in your `__init__.py` file which inherits from `ibs.IbsOpt`.  Defining this class should result in an `__init__.py`
+file that looks like the following:
+
+```python
+import ibs
+
+...
+
+class Extension(ibs.IbsExt):
+    ...
+
+
+class Options(ibs.IbsOpt):
+    pass
+
+```
+
+Similar to the `Extension` class, an empty definition of the `Options` class will cause the framework to crash because
+it expects an `__init__()`, and `get_config()` method to be implemented by your `Options` class.  Both of these methods
+must not take any parameters, and the return type of the `get_config()` method is ignored by the framework.  So a valid
+implmentation of the `Options` class could result in an `__init__.py` file that looks like the following:
+
+```python
+import ibs
+
+...
+
+class Extension(ibs.IbsExt):
+    ...
+
+
+class Options(ibs.IbsOpt):
+    def __init__(self):
+        pass
+    
+    def get_config(self):
+        return
+
+```
+
+When running the framework with this extention definition, you will find that the startup window now has a drop-down
+button next to your extension name.  Expanding this drop-down will not show any additional information.  This is
+because the `Options` class you definied is also a subclass of `QWidget`, and is displayed in the drop-down field for
+your extension on startup.
+
+On startup the framework instanciates your `Options` class via your `Options.__init__()` method.  Once the user presses
+`continue` button on the startup screen, the value you return from your `get_config()` method is passed to your
+`Extension` class as the `options` parameter of the `Extension.__init__()` method.  Here is an example of an extension's
+`__init__.py` file which implements some simple startup configurations.
+
+```python
+from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtWidgets import QVBoxLayout
+
+import ibs
+
+from . import main
+
+class Extension(ibs.IbsExt):
+    def __init__(self, options):
+        super(Extension, self).__init__(options)
+        
+        self.use_option1 = options["togglable1"]
+        self.use_option2 = options["togglable2"]
+        self.use_option3 = options["togglable3"]
+
+    @staticmethod
+    def get_name():
+        return "My New Extension"
+
+    def startup_ref(self):
+        if self.use_option1:
+            return main.specialstartup
+        else:
+            return lambda api, widget: main.generalstartup(
+                api,
+                widget,
+                self.use_option2,
+                self.use_option3
+            )
+
+    def shutdown_ref(self):
+        if self.use_option1:
+            return main.shutdown
+        else:
+            return lambda: main.shutdown, main.othershutdown
+
+
+class Options(ibs.IbsOpt):
+    def __init__(self):
+        super(Options, self).__init__()
+        
+        self.option1 = QCheckBox("Option 1")
+        self.option2 = QCheckBox("Option 2")
+        self.option3 = QCheckBox("Option 3")
+        
+        layout = QVBoxLayout()
+        layout.addWidget(self.option1)
+        layout.addWidget(self.option2)
+        layout.addWidget(self.option3)
+        self.setLayout(layout)
+    
+    def get_config(self):
+        return {
+            "togglable1": self.option1.isChecked(),
+            "togglable2": self.option2.isChecked(),
+            "togglable3": self.option3.isChecked()
+        }
+
+```
+
+In the above example the user is presented with three checkboxes on startup, and when the `continue` button is pressed,
+the boolean values for each of these options are passed to the `Extension` class.  Depending on the configuration the
+user chose, both the `startup_ref()` and `shutdown_ref()` methods could provide different function references, allowing
+for significant flexibility in setting your extension's entry point dynamically.  In addition, these startup
+configurations can be used to change the graphical appearance of your extension using the information provided in the
+[previous section](#extension-graphics).
